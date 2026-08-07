@@ -42,9 +42,25 @@
   const ctx = canvas.getContext('2d');
 
   let W = window.innerWidth, H = window.innerHeight;
+  
+  // ---------- background headline ----------
+  const HEADLINE = "DON'T TOUCH MY KNIVES";
+  const HEADLINE_COLOR = '#c7c3bc';
+  let headlineSize = 10;
+  function fitHeadline(){
+    let size = Math.floor(W * 0.09);
+    ctx.font = `bold ${size}px 'Courier New', monospace`;
+    while(ctx.measureText(HEADLINE).width > W * 0.88 && size > 10){
+      size -= 2;
+      ctx.font = `bold ${size}px 'Courier New', monospace`;
+    }
+    headlineSize = size;
+  }
+
   function resize(){
     W = window.innerWidth; H = window.innerHeight;
     canvas.width = W; canvas.height = H;
+    fitHeadline();
   }
   resize();
   window.addEventListener('resize', resize);
@@ -137,6 +153,16 @@
     const t = now / 1000;
     ctx.clearRect(0, 0, W, H);
     ctx.imageSmoothingEnabled = false;
+
+    
+    // background headline, dead center, behind the knives
+    ctx.font = `bold ${headlineSize}px 'Courier New', monospace`;
+    ctx.fillStyle = HEADLINE_COLOR;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(HEADLINE, W / 2, H / 2);
+
+
 
     for(const k of knives){
       const dx = k.x - mouse.x;
