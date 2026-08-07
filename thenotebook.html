@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Are There Spiders? — ildes.me</title>
+<title>The Notebook — ildes.me</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -13,9 +13,6 @@
     --muted: #9A8F80;
     --tab-outline: #E7D3BD;
     --tab-fill: #BEE7F7;
-    --tab-fill-hover: #AEDFF3;
-    --yes: #3FA34D;
-    --no: #E6402F;
     --shadow: #16130F;
   }
   *{ box-sizing: border-box; }
@@ -59,81 +56,61 @@
     font-weight: 700;
     font-size: clamp(28px, 6vw, 46px);
     letter-spacing: -0.02em;
-    margin: 0 0 42px;
+    margin: 0 0 34px;
     text-align: center;
     position: relative;
     z-index: 1;
   }
 
-  .tab-list{
-    display:flex;
-    flex-direction:column;
-    gap: 14px;
+  .page-content{
     width: min(520px, 92vw);
     position: relative;
     z-index: 1;
   }
 
-  .tab{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    width:100%;
-    padding: 16px 22px;
-    border-radius: 14px;
-    border: 3px solid var(--tab-outline);
-    background: var(--tab-fill);
-    text-decoration:none;
-    color: var(--ink);
-    box-shadow: 6px 6px 0 var(--shadow);
-    transition: transform 0.16s cubic-bezier(.2,.9,.3,1.3), box-shadow 0.16s ease, background 0.16s ease;
-  }
-  .tab:hover{
-    background: var(--tab-fill-hover);
-    transform: translate(-3px, -4px);
-    box-shadow: 10px 10px 0 var(--shadow);
-  }
-  .tab:active{
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0 var(--shadow);
-  }
-  .tab:focus-visible{
-    outline: 3px solid var(--ink);
-    outline-offset: 3px;
+  .movie-title{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: clamp(22px, 4vw, 30px);
+    text-align: left;
+    margin: 0 0 16px;
   }
 
-  .tab-name{
+  .verdict-box{
+    width: 100%;
+    min-height: 220px;
+    border-radius: 18px;
+    border: 3px solid var(--tab-outline);
+    background: var(--tab-fill);
+    box-shadow: 8px 8px 0 var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 32px;
+    text-align:center;
+  }
+
+  .verdict-box p{
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
-    font-size: 17px;
+    font-size: clamp(17px, 2.6vw, 22px);
+    line-height: 1.4;
+    margin: 0;
   }
-  .tab-answer{
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 600;
-    font-size: 15px;
-  }
-  .tab-answer.yes{ color: var(--yes); }
-  .tab-answer.no{ color: var(--no); }
 </style>
 </head>
 <body>
 
   <canvas id="bg-spiders"></canvas>
-  <a class="home-link" href="index.html">&larr; ildes.me</a>
+  <a class="home-link" href="aretherespiders.html">&larr; Are there spiders?</a>
 
-  <h1>Are there spiders?</h1>
+  <h1 class="exclude-spiders">Are there spiders?</h1>
 
-  <div class="tab-list">
-    <a class="tab" href="thenotebook.html"><span class="tab-name">The Notebook</span><span class="tab-answer no">No</span></a>
-    <a class="tab" href="heretic.html"><span class="tab-name">Heretic</span><span class="tab-answer yes">Yes</span></a>
-    <a class="tab" href="movie3.html"><span class="tab-name">Movie 3</span><span class="tab-answer no">No</span></a>
-    <a class="tab" href="movie4.html"><span class="tab-name">Movie 4</span><span class="tab-answer yes">Yes</span></a>
-    <a class="tab" href="movie5.html"><span class="tab-name">Movie 5</span><span class="tab-answer yes">Yes</span></a>
-    <a class="tab" href="movie6.html"><span class="tab-name">Movie 6</span><span class="tab-answer no">No</span></a>
-    <a class="tab" href="movie7.html"><span class="tab-name">Movie 7</span><span class="tab-answer yes">Yes</span></a>
-    <a class="tab" href="movie8.html"><span class="tab-name">Movie 8</span><span class="tab-answer no">No</span></a>
-    <a class="tab" href="movie9.html"><span class="tab-name">Movie 9</span><span class="tab-answer no">No</span></a>
-    <a class="tab" href="movie10.html"><span class="tab-name">Movie 10</span><span class="tab-answer yes">Yes</span></a>
+  <div class="page-content exclude-spiders">
+    <div class="movie-title">The Notebook</div>
+    <div class="verdict-box">
+      <p>No, there are no spiders in this movie.</p>
+    </div>
   </div>
 
 <script>
@@ -184,6 +161,26 @@
 
   function rand(a, b){ return a + Math.random() * (b - a); }
 
+  function getExclusionRects(){
+    const margin = 22;
+    const rects = [];
+    document.querySelectorAll('.exclude-spiders').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      rects.push({
+        left: r.left - margin, right: r.right + margin,
+        top: r.top - margin, bottom: r.bottom + margin
+      });
+    });
+    return rects;
+  }
+
+  function isInsideAny(x, y, rects){
+    for(const r of rects){
+      if(x > r.left && x < r.right && y > r.top && y < r.bottom) return true;
+    }
+    return false;
+  }
+
   let W, H, dpr;
   let spiders = [];
 
@@ -194,12 +191,19 @@
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const count = Math.max(14, Math.round((W * H) / 60000));
+    const rects = getExclusionRects();
+    const count = Math.max(26, Math.round((W * H) / 30000));
     spiders = [];
     for(let i = 0; i < count; i++){
+      let x, y, tries = 0;
+      do{
+        x = rand(0.03, 0.97) * W;
+        y = rand(0.03, 0.97) * H;
+        tries++;
+      } while(isInsideAny(x, y, rects) && tries < 30);
+
       spiders.push({
-        x: rand(0.03, 0.97) * W,
-        y: rand(0.03, 0.97) * H,
+        x, y,
         rot: rand(0, Math.PI * 2),
         scale: rand(0.5, 1.0) * (W * 0.017),
         phase: rand(0, Math.PI * 2),
