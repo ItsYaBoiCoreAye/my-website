@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don't Touch My Knives</title>
+<style>
+  html, body{
+    margin:0; padding:0;
+    width:100%; height:100%;
+    overflow:hidden;
+    background:#171614;
+    background-image:
+      radial-gradient(circle at 50% 0%, #201e1a 0%, #171614 60%);
+  }
+  canvas{
+    position:fixed;
+    top:0; left:0;
+    display:block;
+    cursor: default;
+  }
+  .label{
+    position:fixed;
+    bottom:16px; left:16px;
+    font-family: 'Courier New', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:#5a5650;
+    pointer-events:none;
+    user-select:none;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="label">don't touch my knives</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  let W = window.innerWidth, H = window.innerHeight;
+  
+  // ---------- background headline ----------
+  const HEADLINE = "DON'T TOUCH MY KNIVES";
+  const HEADLINE_COLOR = '#c7c3bc';
+  let headlineSize = 10;
+  function fitHeadline(){
+    let size = Math.floor(W * 0.09);
+    ctx.font = `bold ${size}px 'Courier New', monospace`;
+    while(ctx.measureText(HEADLINE).width > W * 0.88 && size > 10){
+      size -= 2;
+      ctx.font = `bold ${size}px 'Courier New', monospace`;
+    }
+    headlineSize = size;
+  }
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W; canvas.height = H;
+    fitHeadline();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ---------- build the 8-bit knife sprite procedurally ----------
+  function buildKnifeSprite(){
+    const w = 22, h = 9;
+    const off = document.createElement('canvas');
+    off.width = w; off.height = h;
+    const c = off.getContext('2d');
+    c.imageSmoothingEnabled = false;
+
+    // handle
+    c.fillStyle = '#6b3e1e';
+    c.fillRect(0, 2, 7, 5);
+    c.fillStyle = '#4a2a12';
+    c.fillRect(0, 6, 7, 1);
+    c.fillStyle = '#8a5a2e';
+    c.fillRect(0, 2, 7, 1);
+
+    // guard
+    c.fillStyle = '#2b2b2b';
+    c.fillRect(7, 1, 2, 7);
+
+    // blade, tapered to a point using stepped pixels (keeps it crisp/blocky)
+    const bx0 = 9, bx1 = 21, cy = 4, maxHalf = 3;
+    for(let x = bx0; x <= bx1; x++){
+      const t = (x - bx0) / (bx1 - bx0);
+      const half = Math.round(maxHalf * (1 - t));
+      for(let y = cy - half; y <= cy + half; y++){
+        if(y < cy) c.fillStyle = '#eef0ef';
+        else if(y > cy) c.fillStyle = '#9a9d9c';
+        else c.fillStyle = '#d4d7d6';
+        c.fillRect(x, y, 1, 1);
+      }
+    }
+    return { img: off, w, h };
+  }
+  const sprite = buildKnifeSprite();
+
+  // ---------- knives ----------
+  const COUNT = 100;
+  const DRAW_W = 40;
+  const DRAW_H = DRAW_W * (sprite.h / sprite.w);
+  const FLEE_RADIUS = 170;
+
+  function rand(a, b){ return a + Math.random() * (b - a); }
+
+  const knives = [];
+  for(let i = 0; i < COUNT; i++){
+    knives.push({
+      x: rand(30, W - 30),
+      y: rand(30, H - 30),
+      vx: 0, vy: 0,
+      baseAngle: rand(0, Math.PI * 2),
+      renderAngle: rand(0, Math.PI * 2),
+      idlePhase: rand(0, Math.PI * 2),
+      idlePhase2: rand(0, Math.PI * 2),
+      idleSpeed: rand(1.4, 2.6),
+      idleAmpPos: rand(1, 2.2),
+      idleAmpRot: rand(0.05, 0.11)
+    });
+  }
+
+  // ---------- mouse ----------
+  const mouse = { x: -9999, y: -9999 };
+  window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX; mouse.y = e.clientY;
+  });
+  window.addEventListener('mouseleave', () => {
+    mouse.x = -9999; mouse.y = -9999;
+  });
+  window.addEventListener('touchmove', (e) => {
+    if(e.touches && e.touches[0]){
+      mouse.x = e.touches[0].clientX;
+      mouse.y = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  function lerp(a, b, t){ return a + (b - a) * t; }
+  function angleLerp(a, b, t){
+    let diff = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    return a + diff * t;
+  }
+
+  // ---------- update + render loop ----------
+  const margin = 24;
+
+  function step(now){
+    const t = now / 1000;
+    ctx.clearRect(0, 0, W, H);
+    ctx.imageSmoothingEnabled = false;
+
+    
+    // background headline, dead center, behind the knives
+    ctx.font = `bold ${headlineSize}px 'Courier New', monospace`;
+    ctx.fillStyle = HEADLINE_COLOR;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(HEADLINE, W / 2, H / 2);
+
+
+
+    for(const k of knives){
+      const dx = k.x - mouse.x;
+      const dy = k.y - mouse.y;
+      const dist = Math.hypot(dx, dy) || 0.0001;
+      const intensity = Math.max(0, 1 - dist / FLEE_RADIUS); // 0..1
+
+      if(intensity > 0){
+        const nx = dx / dist, ny = dy / dist;
+        const forceMag = intensity * intensity * 1.35;
+        k.vx += nx * forceMag;
+        k.vy += ny * forceMag;
+        // erratic jitter kicks in as the cursor gets close
+        k.vx += (Math.random() - 0.5) * intensity * 0.9;
+        k.vy += (Math.random() - 0.5) * intensity * 0.9;
+      }
+
+      // friction
+      k.vx *= 0.90;
+      k.vy *= 0.90;
+
+      k.x += k.vx;
+      k.y += k.vy;
+
+      // soft bounds
+      if(k.x < margin){ k.x = margin; k.vx = Math.abs(k.vx) * 0.5; }
+      if(k.x > W - margin){ k.x = W - margin; k.vx = -Math.abs(k.vx) * 0.5; }
+      if(k.y < margin){ k.y = margin; k.vy = Math.abs(k.vy) * 0.5; }
+      if(k.y > H - margin){ k.y = H - margin; k.vy = -Math.abs(k.vy) * 0.5; }
+
+      // orientation: face travel direction while fleeing, else drift back to resting angle
+      const speed = Math.hypot(k.vx, k.vy);
+      if(intensity > 0.04 || speed > 0.35){
+        const target = Math.atan2(k.vy, k.vx);
+        k.renderAngle = angleLerp(k.renderAngle, target, 0.15 + intensity * 0.35);
+      } else {
+        k.renderAngle = angleLerp(k.renderAngle, k.baseAngle, 0.03);
+      }
+
+      // idle jiggle, amplified + made irregular by proximity
+      const ampScale = 1 + intensity * 3.2;
+      const oscX = Math.sin(t * k.idleSpeed + k.idlePhase) * k.idleAmpPos * ampScale;
+      const oscY = Math.cos(t * k.idleSpeed * 0.8 + k.idlePhase2) * k.idleAmpPos * ampScale;
+      const jiggleAngle = Math.sin(t * k.idleSpeed * 1.4 + k.idlePhase) * k.idleAmpRot * (1 + intensity * 4);
+      const jitterX = intensity > 0 ? (Math.random() - 0.5) * intensity * 2.5 : 0;
+      const jitterY = intensity > 0 ? (Math.random() - 0.5) * intensity * 2.5 : 0;
+      const jitterA = intensity > 0 ? (Math.random() - 0.5) * intensity * 0.25 : 0;
+
+      const drawX = k.x + oscX + jitterX;
+      const drawY = k.y + oscY + jitterY;
+      const drawAngle = k.renderAngle + jiggleAngle + jitterA;
+
+      ctx.save();
+      ctx.translate(drawX, drawY);
+      ctx.rotate(drawAngle);
+      ctx.drawImage(sprite.img, 0, 0, sprite.w, sprite.h, -DRAW_W / 2, -DRAW_H / 2, DRAW_W, DRAW_H);
+      ctx.restore();
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>

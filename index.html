@@ -3,89 +3,141 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Don't Touch My Knives</title>
+<title>ildes.me</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  :root{
+    --bg: #FCF9F2;
+    --ink: #16130F;
+    --card-bg: #FFFFFF;
+    --accent: #FF5B39;
+    --shadow: #16130F;
+    --muted: #8A8478;
+  }
+  *{ box-sizing: border-box; }
   html, body{
     margin:0; padding:0;
     width:100%; height:100%;
-    overflow:hidden;
-    background:#171614;
-    background-image:
-      radial-gradient(circle at 50% 0%, #201e1a 0%, #171614 60%);
+    background: var(--bg);
+    color: var(--ink);
   }
-  canvas{
-    position:fixed;
-    top:0; left:0;
+  body{
+    font-family: 'Inter', -apple-system, sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+    padding: 8vh 20px 40px;
+  }
+
+  .wordmark{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 44px);
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 auto;
+  }
+
+  .stage{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+  }
+
+  .card-link{
+    text-decoration:none;
+    color:inherit;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+
+  .card{
+    width: min(360px, 78vw);
+    aspect-ratio: 4 / 3;
+    border-radius: 22px;
+    border: 3px solid var(--ink);
+    background: var(--card-bg);
+    box-shadow: 8px 8px 0 var(--shadow);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.18s cubic-bezier(.2,.9,.3,1.3), box-shadow 0.18s ease;
+    display:flex;
+  }
+  .card canvas{
+    width:100%;
+    height:100%;
     display:block;
-    cursor: default;
   }
-  .label{
-    position:fixed;
-    bottom:16px; left:16px;
-    font-family: 'Courier New', monospace;
-    font-size:11px;
-    letter-spacing:0.08em;
-    color:#5a5650;
-    pointer-events:none;
-    user-select:none;
-    text-transform:uppercase;
+
+  .card-link:hover .card{
+    transform: translate(-4px, -6px) scale(1.045);
+    box-shadow: 14px 14px 0 var(--shadow);
+  }
+  .card-link:active .card{
+    transform: translate(-1px, -1px) scale(1.01);
+    box-shadow: 4px 4px 0 var(--shadow);
+  }
+
+  .caption{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+    text-align:center;
+  }
+  .caption .sub{
+    display:block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.01em;
+  }
+
+  .card-link:focus-visible .card{
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
   }
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div class="label">don't touch my knives</div>
+
+  <div class="wordmark">ildes.me</div>
+
+  <div class="stage">
+    <a class="card-link" href="donttouchmyknives.html">
+      <div class="card">
+        <canvas id="thumb"></canvas>
+      </div>
+      <div class="caption">
+        Don't Touch My Knives
+        <span class="sub">a small, defensive experiment</span>
+      </div>
+    </a>
+  </div>
 
 <script>
 (function(){
-  const canvas = document.getElementById('c');
+  // Static mini recreation of the knife-game's art style, drawn once.
+  const canvas = document.getElementById('thumb');
   const ctx = canvas.getContext('2d');
 
-  let W = window.innerWidth, H = window.innerHeight;
-  
-  // ---------- background headline ----------
-  const HEADLINE = "DON'T TOUCH MY KNIVES";
-  const HEADLINE_COLOR = '#c7c3bc';
-  let headlineSize = 10;
-  function fitHeadline(){
-    let size = Math.floor(W * 0.09);
-    ctx.font = `bold ${size}px 'Courier New', monospace`;
-    while(ctx.measureText(HEADLINE).width > W * 0.88 && size > 10){
-      size -= 2;
-      ctx.font = `bold ${size}px 'Courier New', monospace`;
-    }
-    headlineSize = size;
-  }
-
-  function resize(){
-    W = window.innerWidth; H = window.innerHeight;
-    canvas.width = W; canvas.height = H;
-    fitHeadline();
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // ---------- build the 8-bit knife sprite procedurally ----------
   function buildKnifeSprite(){
     const w = 22, h = 9;
     const off = document.createElement('canvas');
     off.width = w; off.height = h;
     const c = off.getContext('2d');
     c.imageSmoothingEnabled = false;
-
-    // handle
-    c.fillStyle = '#6b3e1e';
-    c.fillRect(0, 2, 7, 5);
-    c.fillStyle = '#4a2a12';
-    c.fillRect(0, 6, 7, 1);
-    c.fillStyle = '#8a5a2e';
-    c.fillRect(0, 2, 7, 1);
-
-    // guard
-    c.fillStyle = '#2b2b2b';
-    c.fillRect(7, 1, 2, 7);
-
-    // blade, tapered to a point using stepped pixels (keeps it crisp/blocky)
+    c.fillStyle = '#6b3e1e'; c.fillRect(0, 2, 7, 5);
+    c.fillStyle = '#4a2a12'; c.fillRect(0, 6, 7, 1);
+    c.fillStyle = '#8a5a2e'; c.fillRect(0, 2, 7, 1);
+    c.fillStyle = '#2b2b2b'; c.fillRect(7, 1, 2, 7);
     const bx0 = 9, bx1 = 21, cy = 4, maxHalf = 3;
     for(let x = bx0; x <= bx1; x++){
       const t = (x - bx0) / (bx1 - bx0);
@@ -101,131 +153,51 @@
   }
   const sprite = buildKnifeSprite();
 
-  // ---------- knives ----------
-  const COUNT = 100;
-  const DRAW_W = 40;
-  const DRAW_H = DRAW_W * (sprite.h / sprite.w);
-  const FLEE_RADIUS = 170;
+  function draw(){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
 
-  function rand(a, b){ return a + Math.random() * (b - a); }
+    // background
+    ctx.fillStyle = '#171614';
+    ctx.fillRect(0, 0, W, H);
 
-  const knives = [];
-  for(let i = 0; i < COUNT; i++){
-    knives.push({
-      x: rand(30, W - 30),
-      y: rand(30, H - 30),
-      vx: 0, vy: 0,
-      baseAngle: rand(0, Math.PI * 2),
-      renderAngle: rand(0, Math.PI * 2),
-      idlePhase: rand(0, Math.PI * 2),
-      idlePhase2: rand(0, Math.PI * 2),
-      idleSpeed: rand(1.4, 2.6),
-      idleAmpPos: rand(1, 2.2),
-      idleAmpRot: rand(0.05, 0.11)
+    // headline
+    let size = Math.floor(W * 0.11);
+    ctx.font = `bold ${size}px 'Courier New', monospace`;
+    while(ctx.measureText("DON'T TOUCH").width > W * 0.8 && size > 8){
+      size -= 1;
+      ctx.font = `bold ${size}px 'Courier New', monospace`;
+    }
+    ctx.fillStyle = '#c7c3bc';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText("DON'T TOUCH", W / 2, H / 2 - size * 0.65);
+    ctx.fillText("MY KNIVES", W / 2, H / 2 + size * 0.65);
+
+    // scatter a handful of knives around the edges
+    ctx.imageSmoothingEnabled = false;
+    const seedPositions = [
+      [0.14, 0.18, -0.4], [0.85, 0.15, 2.1], [0.10, 0.82, 0.9],
+      [0.88, 0.80, -1.6], [0.5, 0.10, 1.2], [0.06, 0.5, 2.6],
+      [0.94, 0.5, -0.5], [0.5, 0.9, -2.3]
+    ];
+    const drawW = W * 0.16;
+    const drawH = drawW * (sprite.h / sprite.w);
+    seedPositions.forEach(([px, py, angle]) => {
+      ctx.save();
+      ctx.translate(px * W, py * H);
+      ctx.rotate(angle);
+      ctx.drawImage(sprite.img, 0, 0, sprite.w, sprite.h, -drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.restore();
     });
   }
 
-  // ---------- mouse ----------
-  const mouse = { x: -9999, y: -9999 };
-  window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX; mouse.y = e.clientY;
-  });
-  window.addEventListener('mouseleave', () => {
-    mouse.x = -9999; mouse.y = -9999;
-  });
-  window.addEventListener('touchmove', (e) => {
-    if(e.touches && e.touches[0]){
-      mouse.x = e.touches[0].clientX;
-      mouse.y = e.touches[0].clientY;
-    }
-  }, { passive: true });
-
-  function lerp(a, b, t){ return a + (b - a) * t; }
-  function angleLerp(a, b, t){
-    let diff = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-    return a + diff * t;
-  }
-
-  // ---------- update + render loop ----------
-  const margin = 24;
-
-  function step(now){
-    const t = now / 1000;
-    ctx.clearRect(0, 0, W, H);
-    ctx.imageSmoothingEnabled = false;
-
-    
-    // background headline, dead center, behind the knives
-    ctx.font = `bold ${headlineSize}px 'Courier New', monospace`;
-    ctx.fillStyle = HEADLINE_COLOR;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(HEADLINE, W / 2, H / 2);
-
-
-
-    for(const k of knives){
-      const dx = k.x - mouse.x;
-      const dy = k.y - mouse.y;
-      const dist = Math.hypot(dx, dy) || 0.0001;
-      const intensity = Math.max(0, 1 - dist / FLEE_RADIUS); // 0..1
-
-      if(intensity > 0){
-        const nx = dx / dist, ny = dy / dist;
-        const forceMag = intensity * intensity * 1.35;
-        k.vx += nx * forceMag;
-        k.vy += ny * forceMag;
-        // erratic jitter kicks in as the cursor gets close
-        k.vx += (Math.random() - 0.5) * intensity * 0.9;
-        k.vy += (Math.random() - 0.5) * intensity * 0.9;
-      }
-
-      // friction
-      k.vx *= 0.90;
-      k.vy *= 0.90;
-
-      k.x += k.vx;
-      k.y += k.vy;
-
-      // soft bounds
-      if(k.x < margin){ k.x = margin; k.vx = Math.abs(k.vx) * 0.5; }
-      if(k.x > W - margin){ k.x = W - margin; k.vx = -Math.abs(k.vx) * 0.5; }
-      if(k.y < margin){ k.y = margin; k.vy = Math.abs(k.vy) * 0.5; }
-      if(k.y > H - margin){ k.y = H - margin; k.vy = -Math.abs(k.vy) * 0.5; }
-
-      // orientation: face travel direction while fleeing, else drift back to resting angle
-      const speed = Math.hypot(k.vx, k.vy);
-      if(intensity > 0.04 || speed > 0.35){
-        const target = Math.atan2(k.vy, k.vx);
-        k.renderAngle = angleLerp(k.renderAngle, target, 0.15 + intensity * 0.35);
-      } else {
-        k.renderAngle = angleLerp(k.renderAngle, k.baseAngle, 0.03);
-      }
-
-      // idle jiggle, amplified + made irregular by proximity
-      const ampScale = 1 + intensity * 3.2;
-      const oscX = Math.sin(t * k.idleSpeed + k.idlePhase) * k.idleAmpPos * ampScale;
-      const oscY = Math.cos(t * k.idleSpeed * 0.8 + k.idlePhase2) * k.idleAmpPos * ampScale;
-      const jiggleAngle = Math.sin(t * k.idleSpeed * 1.4 + k.idlePhase) * k.idleAmpRot * (1 + intensity * 4);
-      const jitterX = intensity > 0 ? (Math.random() - 0.5) * intensity * 2.5 : 0;
-      const jitterY = intensity > 0 ? (Math.random() - 0.5) * intensity * 2.5 : 0;
-      const jitterA = intensity > 0 ? (Math.random() - 0.5) * intensity * 0.25 : 0;
-
-      const drawX = k.x + oscX + jitterX;
-      const drawY = k.y + oscY + jitterY;
-      const drawAngle = k.renderAngle + jiggleAngle + jitterA;
-
-      ctx.save();
-      ctx.translate(drawX, drawY);
-      ctx.rotate(drawAngle);
-      ctx.drawImage(sprite.img, 0, 0, sprite.w, sprite.h, -DRAW_W / 2, -DRAW_H / 2, DRAW_W, DRAW_H);
-      ctx.restore();
-    }
-
-    requestAnimationFrame(step);
-  }
-
-  requestAnimationFrame(step);
+  draw();
+  window.addEventListener('resize', draw);
 })();
 </script>
 </body>
