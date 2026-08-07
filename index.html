@@ -43,9 +43,12 @@
   .stage{
     flex:1;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
+    gap:48px;
     width:100%;
+    padding: 32px 0;
   }
 
   .card-link{
@@ -118,6 +121,16 @@
       <div class="caption">
         Don't Touch My Knives
         <span class="sub">a small, defensive experiment</span>
+      </div>
+    </a>
+
+    <a class="card-link" href="aretherespiders">
+      <div class="card">
+        <canvas id="thumb-spiders"></canvas>
+      </div>
+      <div class="caption">
+        Are There Spiders?
+        <span class="sub">spoiler: it depends</span>
       </div>
     </a>
   </div>
@@ -198,6 +211,99 @@
 
   draw();
   window.addEventListener('resize', draw);
+})();
+
+(function(){
+  // Static mini scene for the spiders card: simple, rounded, non-scary spiders.
+  const canvas = document.getElementById('thumb-spiders');
+  const ctx = canvas.getContext('2d');
+
+  function drawSpider(ctx, cx, cy, s, rot){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.scale(s, s);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#1c1a17';
+    ctx.fillStyle = '#1c1a17';
+    ctx.lineWidth = 0.09;
+
+    // 4 curved legs per side
+    const legBends = [-0.9, -0.45, 0.45, 0.9];
+    legBends.forEach((la) => {
+      const midY = Math.sin(la) * 0.5;
+      const endY = Math.sin(la) * 0.95;
+      ctx.beginPath();
+      ctx.moveTo(0.14, 0);
+      ctx.quadraticCurveTo(0.6, midY * 0.6, 1.0, endY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-0.14, 0);
+      ctx.quadraticCurveTo(-0.6, midY * 0.6, -1.0, endY);
+      ctx.stroke();
+    });
+
+    // rounded abdomen
+    ctx.beginPath();
+    ctx.ellipse(0.08, 0, 0.42, 0.36, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // small round head
+    ctx.beginPath();
+    ctx.ellipse(-0.38, 0, 0.22, 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // two friendly red dot eyes
+    ctx.fillStyle = '#e6402f';
+    ctx.beginPath(); ctx.ellipse(-0.45, -0.08, 0.05, 0.05, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-0.45, 0.08, 0.05, 0.05, 0, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  function draw(){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
+
+    // background
+    ctx.fillStyle = '#FFEFE2';
+    ctx.fillRect(0, 0, W, H);
+
+    // 6 spiders scattered around the edges, center left clear for the text
+    const seedPositions = [
+      [0.15, 0.20, -0.3, 0.95], [0.85, 0.18, 2.6, 1.05],
+      [0.10, 0.78, 1.0, 0.9], [0.88, 0.80, -2.0, 1.0],
+      [0.50, 0.90, 0.5, 0.85], [0.50, 0.10, -2.4, 0.85]
+    ];
+    const baseR = W * 0.095;
+    seedPositions.forEach(([px, py, angle, scale]) => {
+      drawSpider(ctx, px * W, py * H, baseR * scale, angle);
+    });
+
+    // headline
+    let size = Math.floor(W * 0.12);
+    ctx.font = `600 ${size}px 'Fredoka', sans-serif`;
+    while(ctx.measureText("Are there").width > W * 0.62 && size > 8){
+      size -= 1;
+      ctx.font = `600 ${size}px 'Fredoka', sans-serif`;
+    }
+    ctx.fillStyle = '#16130F';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText("Are there", W / 2, H / 2 - size * 0.6);
+    ctx.fillText("spiders?", W / 2, H / 2 + size * 0.6);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(draw);
+  }
 })();
 </script>
 </body>
