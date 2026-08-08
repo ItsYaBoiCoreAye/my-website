@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Rich Is Elon Really? — ildes.me</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FCF9F2;
+    --ink: #16130F;
+    --card-bg: #FFFFFF;
+    --accent: #FF5B39;
+    --shadow: #16130F;
+    --muted: #8A8478;
+    --tab-outline: #E7D3BD;
+    --tab-fill: #BEE7F7;
+    --yellow: #FFDD00;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  body{
+    font-family: 'Inter', -apple-system, sans-serif;
+    position: relative;
+    padding-left: 64px;
+  }
+
+  ::selection{ background: var(--yellow); }
+
+  .home-link{
+    position: fixed;
+    top: 18px; left: 76px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+    z-index: 50;
+  }
+  .home-link:hover{ color: var(--ink); }
+
+  /* ---------- left pixel gutter (click to jump) ---------- */
+  #gutter{
+    position: fixed;
+    top:0; left:0;
+    width: 64px;
+    height: 100vh;
+    background: var(--bg);
+    border-right: 3px solid var(--ink);
+    z-index: 40;
+    overflow: visible;
+    cursor: pointer;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--tab-outline) 0px,
+      var(--tab-outline) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  }
+  #gutter-fill{
+    position:absolute;
+    top:0; left:0;
+    width:100%;
+    height:0%;
+    background: linear-gradient(to bottom, rgba(255,221,0,0.0), rgba(255,221,0,0.55));
+    pointer-events:none;
+  }
+  .gutter-tick{
+    position:absolute;
+    left: 5px;
+    width: 54px;
+    height: 12px;
+    border-radius: 6px;
+    background: var(--card-bg);
+    border: 2px solid var(--tab-outline);
+    transform: translateY(-50%);
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 42;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+  }
+  .gutter-tick:hover{
+    transform: translateY(-50%) scale(1.35);
+    border-color: var(--accent);
+  }
+  .gutter-tick.lit{
+    background: var(--yellow);
+    border-color: #C9A800;
+    box-shadow: 0 0 10px 2px rgba(255,221,0,0.8);
+  }
+  .gutter-tick.lit:hover{
+    transform: translateY(-50%) scale(1.35);
+  }
+  .playhead{
+    position:absolute;
+    left: 0;
+    width: 64px;
+    height: 4px;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(255,91,57,0.8);
+    top: 0;
+    z-index: 41;
+    pointer-events: none;
+    transition: top 0.05s linear;
+  }
+  .gutter-hint{
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-90deg);
+    transform-origin: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* ---------- hero ---------- */
+  #hero{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 12vh 24px 8vh;
+    text-align: center;
+  }
+  #hero h1{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 5.4vw, 44px);
+    letter-spacing: -0.02em;
+    margin: 0 0 18px;
+  }
+  #hero p{
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  #hero .fine-print{
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0.75;
+    margin-top: 16px;
+  }
+  .scroll-hint{
+    margin-top: 30px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--muted);
+    animation: bob 1.6s ease-in-out infinite;
+  }
+  @keyframes bob{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(6px); }
+  }
+
+  /* ---------- sticky counter ---------- */
+  #counter{
+    position: fixed;
+    top: 18px;
+    right: 22px;
+    background: var(--card-bg);
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    box-shadow: 6px 6px 0 var(--shadow);
+    padding: 10px 18px;
+    text-align: right;
+    z-index: 45;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  #counter.visible{
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #counter .label{
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  #counter .value{
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(18px, 3vw, 26px);
+    white-space: nowrap;
+  }
+  #counter .pct{
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ---------- scroll track ---------- */
+  #track{
+    position: relative;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .marker{
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 20px 22px;
+    border-radius: 18px;
+    border: 3px solid var(--tab-outline);
+    background: var(--tab-fill);
+    box-shadow: 8px 8px 0 var(--shadow);
+    transform: translateY(-50%);
+    transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+  }
+  .marker.hit{
+    border-color: var(--yellow);
+    box-shadow: 8px 8px 0 var(--shadow), 0 0 0 3px rgba(255,221,0,0.5);
+  }
+  .marker .icon{
+    flex: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 3px solid var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 26px;
+  }
+  .marker .body{ min-width: 0; }
+  .marker .m-value{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: clamp(17px, 2.6vw, 21px);
+    line-height: 1.25;
+  }
+  .marker .m-label{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    opacity: 0.75;
+    margin: 2px 0 4px;
+  }
+  .marker .m-desc{
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--muted);
+    margin: 0;
+  }
+  .marker .m-note{
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--accent);
+    margin: 8px 0 0;
+  }
+  .marker.final{
+    background: var(--yellow);
+    border-color: var(--ink);
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .marker.final .top-row{
+    display:flex;
+    align-items:center;
+    gap: 18px;
+  }
+  .marker.final .m-desc{ color: #4a3f00; }
+  .marker.final .savings-list{
+    margin: 14px 0 0;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 12px;
+    border: 2px dashed var(--ink);
+  }
+  .marker.final .savings-list ul{
+    margin: 0 0 10px;
+    padding-left: 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: #3a3100;
+  }
+  .marker.final .savings-total{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink);
+    margin: 0;
+  }
+  .marker.final .savings-punchline{
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #4a3f00;
+    margin: 6px 0 0;
+  }
+
+  /* ---------- end ---------- */
+  #end{
+    position: relative;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 10vh 24px 18vh;
+    text-align: center;
+  }
+  #end h2{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: clamp(22px, 4vw, 30px);
+    margin: 0 0 14px;
+  }
+  #end p{
+    font-family: 'Inter', sans-serif;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0 0 26px;
+  }
+  #end a.back{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 12px 22px;
+    border-radius: 14px;
+    border: 3px solid var(--ink);
+    background: var(--card-bg);
+    box-shadow: 6px 6px 0 var(--shadow);
+    display: inline-block;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+  #end a.back:hover{
+    transform: translate(-3px,-4px);
+    box-shadow: 10px 10px 0 var(--shadow);
+  }
+
+  @media (max-width: 560px){
+    body{ padding-left: 46px; }
+    #gutter{ width: 46px; }
+    .home-link{ left: 56px; font-size: 12px; }
+    .playhead{ width: 46px; }
+    .gutter-tick{ width: 36px; }
+    .marker{ flex-direction: column; align-items: flex-start; gap: 10px; }
+    .marker.final .top-row{ flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+  <a class="home-link" href="index.html">&larr; ildes.me</a>
+
+  <div id="gutter" title="Click anywhere to jump there">
+    <div id="gutter-fill"></div>
+    <div class="playhead" id="playhead"></div>
+    <div class="gutter-hint">click to jump</div>
+    <!-- ticks injected by JS -->
+  </div>
+
+  <div id="counter">
+    <div class="label">You've scrolled to</div>
+    <div class="value" id="counter-value">$0</div>
+    <div class="pct" id="counter-pct">0% of $1,045,000,000,000</div>
+  </div>
+
+  <div id="hero">
+    <h1>How rich is Elon really?</h1>
+    <p>Elon at his peak net wealth was worth $1.045 trillion. How does this compare to the rest of the world?</p>
+    <p class="fine-print">All figures below are rounded, illustrative estimates — not exact valuations. Scroll speed also speeds up every order of magnitude, up until $100 billion.</p>
+    <div class="scroll-hint">scroll ↓ (or click the ruler on the left)</div>
+  </div>
+
+  <div id="track"><!-- markers injected by JS --></div>
+
+  <div id="end">
+    <h2>That's the top.</h2>
+    <p>You just scrolled through $1,045,000,000,000. Notice how almost all of that distance lived in the very last stretch of the page, well past $100 billion — that's what it means for wealth to be this concentrated.</p>
+    <a class="back" href="index.html">Back to ildes.me</a>
+  </div>
+
+<script>
+(function(){
+
+  // ---------- piecewise-linear scale, speeding up every order of magnitude ----------
+  // Each band below has its own constant $-per-pixel rate. The rate roughly
+  // multiplies by ~6x each order of magnitude (so scrolling genuinely feels
+  // quicker as the numbers grow) but that acceleration is capped at $100B —
+  // the final band ($100B to Musk's $1.045T peak) reuses that same, no-longer-
+  // accelerating rate. Because the acceleration stops there, that last band
+  // still needs to cover an enormous 945-billion-dollar range, so it ends up
+  // dominating the vast majority of the whole page — which is the point.
+  const BANDS = [
+    { vStart: 0,                  vEnd: 100,                  pStart: 0,        pEnd: 30_000    },
+    { vStart: 100,                vEnd: 1_000,                pStart: 30_000,   pEnd: 74_000    },
+    { vStart: 1_000,              vEnd: 10_000,               pStart: 74_000,   pEnd: 147_000   },
+    { vStart: 10_000,             vEnd: 100_000,              pStart: 147_000,  pEnd: 266_000   },
+    { vStart: 100_000,            vEnd: 1_000_000,            pStart: 266_000,  pEnd: 461_000   },
+    { vStart: 1_000_000,          vEnd: 10_000_000,           pStart: 461_000,  pEnd: 781_000   },
+    { vStart: 10_000_000,         vEnd: 100_000_000,          pStart: 781_000,  pEnd: 1_305_000 },
+    { vStart: 100_000_000,        vEnd: 1_000_000_000,        pStart: 1_305_000, pEnd: 2_164_000 },
+    { vStart: 1_000_000_000,      vEnd: 10_000_000_000,       pStart: 2_164_000, pEnd: 3_572_000 },
+    { vStart: 10_000_000_000,     vEnd: 100_000_000_000,      pStart: 3_572_000, pEnd: 5_881_000 },
+    { vStart: 100_000_000_000,    vEnd: 1_045_000_000_000,    pStart: 5_881_000, pEnd: 29_900_000 }
+  ];
+  const TOTAL_TRACK_PX = BANDS[BANDS.length - 1].pEnd;
+  const MAX_VALUE = BANDS[BANDS.length - 1].vEnd;
+
+  function pxForValue(v){
+    for(const b of BANDS){
+      if(v <= b.vEnd){
+        const t = (v - b.vStart) / (b.vEnd - b.vStart);
+        return b.pStart + t * (b.pEnd - b.pStart);
+      }
+    }
+    return TOTAL_TRACK_PX;
+  }
+
+  function valueForPx(px){
+    if(px >= TOTAL_TRACK_PX) return MAX_VALUE;
+    for(const b of BANDS){
+      if(px <= b.pEnd){
+        const t = (px - b.pStart) / (b.pEnd - b.pStart);
+        return b.vStart + t * (b.vEnd - b.vStart);
+      }
+    }
+    return MAX_VALUE;
+  }
+
+  function fmtMoney(v){
+    v = Math.max(0, Math.round(v));
+    return '$' + v.toLocaleString('en-US');
+  }
+
+  function fmtPct(value){
+    const pct = (value / MAX_VALUE) * 100;
+    if(pct >= 100) return '100%';
+    if(pct >= 1) return pct.toFixed(2) + '%';
+    if(pct <= 0) return '0%';
+    if(pct >= 0.0001) return pct.toFixed(6).replace(/0+$/, '').replace(/\.$/, '') + '%';
+    return pct.toExponential(2) + '%';
+  }
+
+  // ---------- checkpoints ----------
+  const MARKERS = [
+    // $0 – $100 — everyday stuff
+    { value: 5,        icon: '☕', label: 'A cup of coffee',        desc: 'A flat white, give or take.' },
+    { value: 15,       icon: '🥪', label: 'Lunch out',              desc: 'A sandwich and a drink.' },
+    { value: 30,       icon: '🎬', label: 'Movie night for two',    desc: 'Tickets plus popcorn.' },
+    { value: 60,       icon: '👟', label: 'A pair of sneakers',     desc: 'Nothing fancy, just decent shoes.' },
+
+    // $100 – $10,000
+    { value: 250,      icon: '🎫', label: 'A concert ticket',       desc: 'General admission, mid-tier act.' },
+    { value: 500,      icon: '⌚', label: 'A smartwatch',           desc: 'Mid-range fitness watch.' },
+    { value: 1200,     icon: '📱', label: 'A new iPhone',           desc: 'Latest model, base storage.',
+      note: 'Skip your daily coffee (~$5) and you\'d have this saved in about 8 months.' },
+    { value: 2500,     icon: '💻', label: 'A high-end laptop',      desc: 'The kind creatives actually want.' },
+    { value: 6000,     icon: '✈️', label: 'Flight to Europe',       desc: 'Economy return from Sydney.' },
+
+    // $10,000 – $1,000,000 — cars, salaries, first homes
+    { value: 12_000,   icon: '🚗', label: 'A used car',             desc: 'Reliable second-hand runabout.' },
+    { value: 25_000,   icon: '🏍️', label: 'A motorbike',            desc: 'New mid-size bike.' },
+    { value: 45_000,   icon: '🚙', label: 'A brand new car',        desc: 'Popular mid-size sedan or SUV.',
+      note: 'Save $1,000 every fortnight and it\'s yours in about 1.7 years.' },
+    { value: 65_000,   icon: '💼', label: 'Median Australian salary', desc: 'Roughly the median full-time income.' },
+    { value: 92_000,   icon: '💰', label: 'Average gross income',   desc: 'Roughly the average full-time income in Australia, per year.' },
+    { value: 150_000,  icon: '🎓', label: 'A university degree',    desc: 'Total cost including living expenses.' },
+    { value: 250_000,  icon: '🏢', label: 'An apartment deposit',   desc: '20% deposit on a city unit.' },
+    { value: 500_000,  icon: '🏡', label: 'A small regional house', desc: 'Modest house outside the big cities.',
+      note: 'Save $1,000 every fortnight and it\'ll take about 19 years to get here.' },
+    { value: 750_000,  icon: '🏬', label: 'A Sydney unit',          desc: 'Median unit price in greater Sydney.' },
+
+    // $1,000,000 – $100,000,000 — houses, mansions, CEO pay
+    { value: 1_100_000,  icon: '🏠', label: 'Average Sydney house', desc: 'Roughly the median house price in Sydney, NSW.' },
+    { value: 2_500_000,  icon: '🏘️', label: 'Inner-city terrace',   desc: 'Renovated terrace, inner Sydney.' },
+    { value: 5_000_000,  icon: '🏙️', label: 'Harbourside apartment', desc: 'Sub-penthouse, water views.' },
+    { value: 8_000_000,  icon: '🏰', label: 'A small mansion',      desc: 'Six bedrooms, pool, tennis court.' },
+    { value: 12_000_000, icon: '⛵', label: 'A modest yacht',       desc: 'Entry point for "yacht" money.',
+      note: 'Give up your daily coffee and you\'d have this in about 6,575 years.' },
+    { value: 18_000_000, icon: '🛩️', label: 'A small private jet', desc: 'Used light business jet.',
+      note: 'At $1,000 every fortnight, that\'s about 692 years of saving.' },
+    { value: 25_000_000, icon: '👔', label: 'A Fortune 500 CEO\'s yearly pay', desc: 'Roughly the average total annual compensation.',
+      note: 'That\'s about 272 years of the average Australian income.' },
+    { value: 40_000_000, icon: '🎥', label: 'A blockbuster movie budget', desc: 'Mid-tier Hollywood production.' },
+    { value: 65_000_000, icon: '🚀', label: 'An orbital rocket launch',   desc: 'Roughly what a single launch costs.',
+      note: 'Equivalent to about 706 years of the average Australian income.' },
+    { value: 90_000_000, icon: '🎨', label: 'A painting at auction', desc: 'What a major artwork can fetch.' },
+
+    // $100,000,000 – $1,000,000,000 — superyachts, teams, fortunes
+    { value: 120_000_000, icon: '🏯', label: 'The world\'s most expensive home', desc: 'Roughly what the priciest private residences have sold for.' },
+    { value: 180_000_000, icon: '🛥️', label: 'A superyacht',       desc: 'Helicopter pad, full crew.',
+      note: 'Skip your daily coffee and it\'s yours in about 98,630 years.' },
+    { value: 250_000_000, icon: '👑', label: 'The British Royal Family\'s estimated wealth', desc: 'A rough, often-cited public estimate.' },
+    { value: 350_000_000, icon: '🎥', label: 'A top Hollywood star\'s reported net worth', desc: 'Roughly one of the wealthiest working actors.' },
+    { value: 500_000_000, icon: '🏈', label: 'A smaller sports franchise', desc: 'Sale price of a smaller-market pro team.',
+      note: 'At $1,000 every fortnight, that\'s about 19,231 years of saving.' },
+    { value: 650_000_000, icon: '🇺🇸', label: 'A former head of state\'s reported wealth', desc: 'Roughly the wealthiest ex-leaders, post-office.' },
+    { value: 800_000_000, icon: '🏟️', label: 'A new NFL stadium',  desc: 'Roughly what a modern stadium costs to build.' },
+    { value: 950_000_000, icon: '📺', label: 'A media mogul\'s reported net worth', desc: 'Roughly one of the wealthiest self-made media figures.' },
+
+    // $1,000,000,000 – $100,000,000,000 — billionaires
+    { value: 2_300_000_000,     icon: '🏀', label: 'An NBA franchise sale', desc: 'Roughly a recent NBA team sale price.' },
+    { value: 44_000_000_000,    icon: '🐦', label: 'Buying Twitter',        desc: 'What Elon Musk paid for Twitter in 2022.',
+      note: 'About 478,261 years of the average Australian income.' },
+
+    // $100,000,000,000 – $1,045,000,000,000 — the acceleration stops here.
+    // This entire, dominant stretch is what separates Musk's peak from
+    // everyone else on this list.
+    { value: 105_000_000_000,   icon: '🖥️', label: 'Bill Gates\' reported net worth', desc: 'Roughly, at time of writing.' },
+    { value: 180_000_000_000,   icon: '📦', label: 'Jeff Bezos\' reported net worth', desc: 'Roughly, at time of writing.',
+      note: 'Skip your daily coffee and you\'d have this in roughly 98.6 million years.' },
+    { value: 200_000_000_000,   icon: '🧓', label: 'Warren Buffett\'s reported net worth', desc: 'Roughly, at time of writing.' },
+    { value: 500_000_000_000,   icon: '🇧🇪', label: 'Roughly Belgium\'s GDP', desc: 'A whole country\'s yearly output.' },
+    { value: 700_000_000_000,   icon: '🇨🇭', label: 'Roughly Switzerland\'s GDP', desc: 'Another whole country\'s yearly output.' },
+    { value: 1_000_000_000_000, icon: '🍎', label: 'Apple crossing $1 trillion', desc: 'A milestone market cap moment for Apple.' },
+    {
+      value: 1_045_000_000_000, icon: '👑', label: 'Elon Musk\'s peak net worth', desc: 'The top of this chart — where we started.',
+      final: true,
+      savings: [
+        { label: 'Give up your daily coffee ($5/day)', annual: 1825 },
+        { label: 'Cook instead of ordering in, 3x/week ($25/meal)', annual: 3900 },
+        { label: 'Save $1,000 every fortnight', annual: 26000 },
+        { label: 'Cancel your streaming subscriptions ($60/month)', annual: 720 },
+        { label: 'Skip the gym membership, run outside ($80/month)', annual: 960 },
+        { label: 'Bring lunch from home ($15/workday)', annual: 3825 },
+        { label: 'Downgrade your phone plan ($40/month)', annual: 480 },
+        { label: 'Skip one overseas holiday a year ($3,000)', annual: 3000 },
+        { label: 'Drive a cheaper car, save on fuel & insurance ($150/month)', annual: 1800 },
+        { label: 'Buy generic brands at the supermarket ($30/week)', annual: 1560 }
+      ]
+    }
+  ];
+
+  // ---------- shared: current position, refreshed defensively ----------
+  const track = document.getElementById('track');
+  let trackTop = 0;
+  function measure(){
+    trackTop = track.getBoundingClientRect().top + window.scrollY;
+  }
+
+  // ---------- build gutter ticks (each independently clickable) ----------
+  const gutter = document.getElementById('gutter');
+  const gutterFill = document.getElementById('gutter-fill');
+  const playhead = document.getElementById('playhead');
+  const tickEls = [];
+
+  MARKERS.forEach((m) => {
+    const px = pxForValue(m.value);
+    const frac = px / TOTAL_TRACK_PX;
+    const el = document.createElement('div');
+    el.className = 'gutter-tick';
+    el.style.top = (frac * 100) + '%';
+    el.title = m.label + ' — ' + fmtMoney(m.value);
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      measure();
+      const isLast = m === MARKERS[MARKERS.length - 1];
+      const target = isLast
+        ? document.documentElement.scrollHeight
+        : trackTop + px;
+      window.scrollTo({ top: target, behavior: 'smooth' });
+    });
+    gutter.appendChild(el);
+    tickEls.push({ el, frac });
+  });
+
+  // ---------- build track markers ----------
+  const markerEls = [];
+
+  MARKERS.forEach((m) => {
+    const px = pxForValue(m.value);
+    const el = document.createElement('div');
+    el.className = 'marker' + (m.final ? ' final' : '');
+    el.style.top = px + 'px';
+
+    if(m.final){
+      const totalAnnual = m.savings.reduce((s, x) => s + x.annual, 0);
+      const years = m.value / totalAnnual;
+      const humanExistence = 300000; // rough, illustrative
+      const multiple = years / humanExistence;
+      const listHtml = m.savings.map((s) =>
+        '<li>' + s.label + ' — $' + s.annual.toLocaleString('en-US') + '/yr</li>'
+      ).join('');
+
+      el.innerHTML =
+        '<div class="top-row">' +
+          '<div class="icon">' + m.icon + '</div>' +
+          '<div class="body">' +
+            '<div class="m-value">' + fmtMoney(m.value) + '</div>' +
+            '<div class="m-label">' + m.label + '</div>' +
+            '<p class="m-desc">' + m.desc + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="savings-list">' +
+          '<ul>' + listHtml + '</ul>' +
+          '<p class="savings-total">Combine all ten and you\'re saving about $' + totalAnnual.toLocaleString('en-US') + ' a year.</p>' +
+          '<p class="savings-punchline">Keep that up and you\'d have Elon\'s peak net worth in roughly ' +
+            Math.round(years).toLocaleString('en-US') + ' years — about ' + multiple.toFixed(0) +
+            ' times longer than modern humans have existed on Earth.</p>' +
+        '</div>';
+    } else {
+      el.innerHTML =
+        '<div class="icon">' + m.icon + '</div>' +
+        '<div class="body">' +
+          '<div class="m-value">' + fmtMoney(m.value) + '</div>' +
+          '<div class="m-label">' + m.label + '</div>' +
+          '<p class="m-desc">' + m.desc + '</p>' +
+          (m.note ? '<p class="m-note">' + m.note + '</p>' : '') +
+        '</div>';
+    }
+
+    track.appendChild(el);
+    markerEls.push({ el, px });
+  });
+
+  track.style.height = (TOTAL_TRACK_PX + 400) + 'px';
+
+  // ---------- scroll wiring ----------
+  const counter = document.getElementById('counter');
+  const counterValue = document.getElementById('counter-value');
+  const counterPct = document.getElementById('counter-pct');
+
+  function isAtPageBottom(){
+    return (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 2);
+  }
+
+  let ticking = false;
+  function update(){
+    ticking = false;
+    measure(); // re-measure every tick so layout drift can never cause an under/overshoot
+    const raw = window.scrollY - trackTop;
+    let px = Math.max(0, Math.min(TOTAL_TRACK_PX, raw));
+    let value = valueForPx(px);
+
+    if(isAtPageBottom()){
+      px = TOTAL_TRACK_PX;
+      value = MAX_VALUE;
+    }
+
+    const frac = px / TOTAL_TRACK_PX;
+
+    counter.classList.toggle('visible', raw > -40);
+    counterValue.textContent = fmtMoney(value);
+    counterPct.textContent = fmtPct(value) + ' of $1,045,000,000,000';
+
+    gutterFill.style.height = (frac * 100) + '%';
+    playhead.style.top = (frac * 100) + '%';
+
+    tickEls.forEach((t) => { t.el.classList.toggle('lit', frac >= t.frac - 0.00001); });
+    markerEls.forEach((mk) => { mk.el.classList.toggle('hit', px >= mk.px - 4); });
+  }
+
+  function onScroll(){
+    if(!ticking){
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  }
+
+  // ---------- gutter background click (approximate jump for empty space) ----------
+  gutter.addEventListener('click', (e) => {
+    const rect = gutter.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const frac = Math.min(1, Math.max(0, y / rect.height));
+    measure();
+    const targetScroll = trackTop + frac * TOTAL_TRACK_PX;
+    window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  });
+
+  window.addEventListener('resize', () => { measure(); update(); });
+  window.addEventListener('load', () => { measure(); update(); });
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(() => { measure(); update(); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  measure();
+  update();
+})();
+</script>
+</body>
+</html>

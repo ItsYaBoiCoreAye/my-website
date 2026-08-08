@@ -134,6 +134,16 @@
       </div>
     </a>
 
+    <a class="card-link" href="trillionaire.html">
+      <div class="card">
+        <canvas id="thumb-rich"></canvas>
+      </div>
+      <div class="caption">
+        How Rich?
+        <span class="sub">spoiler: too rich</span>
+      </div>
+    </a>
+
     <a class="card-link" href="buymeacoffee">
       <div class="card">
         <canvas id="thumb-bmc"></canvas>
@@ -307,6 +317,75 @@
     ctx.textBaseline = 'middle';
     ctx.fillText("Are there", W / 2, H / 2 - size * 0.6);
     ctx.fillText("spiders?", W / 2, H / 2 + size * 0.6);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(draw);
+  }
+})();
+
+(function(){
+  // Static mini recreation of the trillionaire.html page's style: its cream
+  // background, scattered dollar signs, and bold headline.
+  const canvas = document.getElementById('thumb-rich');
+  const ctx = canvas.getContext('2d');
+
+  function draw(){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
+
+    // background — same cream as trillionaire.html
+    ctx.fillStyle = '#FCF9F2';
+    ctx.fillRect(0, 0, W, H);
+
+    // scatter muted dollar signs around the edges, center clear for the text
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const seedPositions = [
+      [0.14, 0.16, -0.25, 1.0], [0.86, 0.14, 0.3, 1.15],
+      [0.09, 0.5, 0.15, 0.85],  [0.91, 0.5, -0.2, 0.9],
+      [0.13, 0.85, 0.2, 1.0],   [0.87, 0.86, -0.3, 1.1],
+      [0.5, 0.92, 0.1, 0.8]
+    ];
+    const baseSize = W * 0.16;
+    seedPositions.forEach(([px, py, rot, scale]) => {
+      ctx.save();
+      ctx.translate(px * W, py * H);
+      ctx.rotate(rot);
+      ctx.font = `700 ${Math.round(baseSize * scale)}px 'Roboto Mono', monospace`;
+      ctx.fillStyle = 'rgba(22, 19, 15, 0.14)';
+      ctx.fillText('$', 0, 0);
+      ctx.restore();
+    });
+
+    // one yellow accent dollar sign, top right, like the crown marker
+    ctx.save();
+    ctx.translate(W * 0.82, H * 0.28);
+    ctx.rotate(-0.15);
+    ctx.font = `700 ${Math.round(baseSize * 1.3)}px 'Roboto Mono', monospace`;
+    ctx.fillStyle = '#FFDD00';
+    ctx.strokeStyle = '#16130F';
+    ctx.lineWidth = 2;
+    ctx.strokeText('$', 0, 0);
+    ctx.fillText('$', 0, 0);
+    ctx.restore();
+
+    // headline
+    let size = Math.floor(W * 0.13);
+    ctx.font = `700 ${size}px 'Fredoka', sans-serif`;
+    while(ctx.measureText("HOW RICH").width > W * 0.72 && size > 8){
+      size -= 1;
+      ctx.font = `700 ${size}px 'Fredoka', sans-serif`;
+    }
+    ctx.fillStyle = '#16130F';
+    ctx.fillText('HOW RICH', W / 2, H / 2 - size * 0.62);
+    ctx.fillText('IS ELON?', W / 2, H / 2 + size * 0.62);
   }
 
   draw();
