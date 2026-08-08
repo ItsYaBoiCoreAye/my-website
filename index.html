@@ -120,7 +120,7 @@
       </div>
       <div class="caption">
         Don't Touch My Knives
-        <span class="sub">a small, defensive experiment</span>
+        <span class="sub">really... don't do it</span>
       </div>
     </a>
 
@@ -131,6 +131,16 @@
       <div class="caption">
         Are There Spiders?
         <span class="sub">spoiler: it depends</span>
+      </div>
+    </a>
+
+    <a class="card-link" href="buymeacoffee">
+      <div class="card">
+        <canvas id="thumb-bmc"></canvas>
+      </div>
+      <div class="caption">
+        Buy Me A Coffee
+        <span class="sub">please, I'm broke</span>
       </div>
     </a>
   </div>
@@ -304,6 +314,99 @@
   if(document.fonts && document.fonts.ready){
     document.fonts.ready.then(draw);
   }
+})();
+
+(function(){
+  // Static mini recreation of the buymeacoffee.html page: the muted yellow
+  // background, its scattered coffee-cup pattern, and the pill button.
+  const canvas = document.getElementById('thumb-bmc');
+  const ctx = canvas.getContext('2d');
+
+  function drawCoffeeIcon(cx, cy, s, color){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(s, s);
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(-0.5, -0.3);
+    ctx.lineTo(0.5, -0.3);
+    ctx.lineTo(0.4, 0.5);
+    ctx.lineTo(-0.4, 0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.lineWidth = 0.11;
+    ctx.beginPath();
+    ctx.arc(0.58, -0.02, 0.22, -Math.PI * 0.5, Math.PI * 0.5);
+    ctx.stroke();
+
+    ctx.lineWidth = 0.08;
+    ctx.beginPath();
+    ctx.moveTo(-0.15, -0.42);
+    ctx.quadraticCurveTo(-0.28, -0.62, -0.1, -0.8);
+    ctx.moveTo(0.15, -0.42);
+    ctx.quadraticCurveTo(0.02, -0.62, 0.2, -0.8);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawPillButton(cx, cy, w, h){
+    const r = h / 2;
+    ctx.save();
+    ctx.fillStyle = '#FFDD00';
+    ctx.beginPath();
+    ctx.moveTo(cx - w / 2 + r, cy - h / 2);
+    ctx.arcTo(cx + w / 2, cy - h / 2, cx + w / 2, cy + h / 2, r);
+    ctx.arcTo(cx + w / 2, cy + h / 2, cx - w / 2, cy + h / 2, r);
+    ctx.arcTo(cx - w / 2, cy + h / 2, cx - w / 2, cy - h / 2, r);
+    ctx.arcTo(cx - w / 2, cy - h / 2, cx + w / 2, cy - h / 2, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 3;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `700 ${Math.round(h * 0.42)}px -apple-system, sans-serif`;
+    ctx.fillText('☕ Buy me a coffee', cx, cy + h * 0.03);
+  }
+
+  function draw(){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
+
+    // background — same muted yellow as buymeacoffee.html
+    ctx.fillStyle = '#B7A968';
+    ctx.fillRect(0, 0, W, H);
+
+    // evenly spaced coffee-cup pattern
+    const spacing = W * 0.13;
+    const iconSize = spacing * 0.16;
+    for(let y = spacing / 2; y < H + spacing; y += spacing){
+      for(let x = spacing / 2; x < W + spacing; x += spacing){
+        drawCoffeeIcon(x, y, iconSize, 'rgba(74, 58, 20, 0.18)');
+      }
+    }
+
+    // the button itself, dead center
+    drawPillButton(W / 2, H / 2, W * 0.62, H * 0.16);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
 })();
 </script>
 </body>
